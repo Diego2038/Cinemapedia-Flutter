@@ -1,6 +1,6 @@
 
 import 'package:cinemapedia/infraestructure/models/moviedb/movie_moviedb.dart';
-
+// https://quicktype.io/ 
 class MovieDbResponse {
     final Dates? dates;
     final int page;

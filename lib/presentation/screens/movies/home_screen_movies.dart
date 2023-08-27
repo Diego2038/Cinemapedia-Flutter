@@ -1,7 +1,7 @@
 
 
-
-import 'package:cinemapedia/presentation/providers/movies/movies_providers.dart';
+import 'package:cinemapedia/presentation/providers/providers.dart';
+import 'package:cinemapedia/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';  
 
@@ -14,7 +14,8 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: _HomeView()
+      body: _HomeView(),
+      bottomNavigationBar: CustomBottomNavigation(),
     );
   }
 }
@@ -40,14 +41,59 @@ class _HomeViewState extends ConsumerState<_HomeView> {
 
     final nowPlayingMovies = ref.watch( nowPlayingMoviesProvider );
 
-    if( nowPlayingMovies.isEmpty ) const Center(child: CircularProgressIndicator());
+    final slideShowMovies = ref.watch( moviesSlideshowProvider );
 
-    return ListView.builder(
-      itemCount: nowPlayingMovies.length,
-      itemBuilder: (context, index) {
-        final movie = nowPlayingMovies[index];
-        return ListTile(title: Text(movie.title));
-      },
+    if( slideShowMovies.isEmpty ) return const Center(child: CircularProgressIndicator());
+
+    return CustomScrollView(
+      slivers: [
+
+        const SliverAppBar(
+          floating: true,
+          flexibleSpace: FlexibleSpaceBar(
+            title: CustomAppbar(),
+            centerTitle: false,
+            titlePadding: EdgeInsets.zero,
+          ),
+        ),
+
+        SliverList(delegate: SliverChildBuilderDelegate(
+          (context, index) => Column(
+            children: [
+        
+              // const CustomAppbar(),
+              
+              MoviesSlideshow(movies: slideShowMovies,),
+        
+              MovieHorizontalListview(
+                movies: nowPlayingMovies,
+                title: "En cines",
+                subTitle: "Febrero 31",
+                loadNextPage: () => ref.watch( nowPlayingMoviesProvider.notifier ).loadNextPage(),
+              ),
+        
+              MovieHorizontalListview(
+                movies: nowPlayingMovies,
+                title: "En cines",
+                subTitle: "En este mes",
+                loadNextPage: () => ref.watch( nowPlayingMoviesProvider.notifier ).loadNextPage(),
+              ),
+        
+              MovieHorizontalListview(
+                movies: nowPlayingMovies,
+                title: "En cines",
+                subTitle: "En todos los tiempos",
+                loadNextPage: () => ref.watch( nowPlayingMoviesProvider.notifier ).loadNextPage(),
+              ),
+
+              const SizedBox(height: 50,)
+        
+            ],
+          ),
+          childCount: 1
+        ))
+
+      ],
     );
   }
 }
