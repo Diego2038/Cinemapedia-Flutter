@@ -29,7 +29,6 @@ class _HomeView extends ConsumerStatefulWidget {
 
 class _HomeViewState extends ConsumerState<_HomeView> {
 
-
   @override
   void initState() {
     super.initState();
@@ -42,16 +41,16 @@ class _HomeViewState extends ConsumerState<_HomeView> {
   @override
   Widget build(BuildContext context) {
 
+    final isLoadingData = ref.watch( initialLoadingProvider );
+
+    if( isLoadingData ) return const FullScreenLoader();
+
     final nowPlayingMovies = ref.watch( nowPlayingMoviesProvider );
     final popularMovies = ref.watch( popularMoviesProvider );
     final upcomingMovies = ref.watch( upcomingMoviesProvider );
     final topRatedMovies = ref.watch( topRatedMoviesProvider );
 
     final slideShowMovies = ref.watch( moviesSlideshowProvider );
-
-    if( slideShowMovies.isEmpty ) return const Center(child: CircularProgressIndicator());
-
-    return const FullScreenLoader();
 
     return CustomScrollView(
       slivers: [
