@@ -33,7 +33,7 @@ class ActorsByMovieNotifier extends StateNotifier<Map<String,List<Actor>>>{
 
   Future<void> loadActors( String movieId ) async {
     if( state[movieId] != null ) return;
-    print("Realizando petición HTTP - actors");
+    // print("Realizando petición HTTP - actors");
     final actors = await getActors(movieId);
 
     state = {...state, movieId: actors };
