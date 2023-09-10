@@ -1,5 +1,7 @@
 
 
+import 'dart:async';
+
 import 'package:animate_do/animate_do.dart';
 import 'package:cinemapedia/config/helpers/human_formats.dart';
 import 'package:cinemapedia/domain/entities/movie.dart';
@@ -10,6 +12,8 @@ typedef SearchMoviesCallback = Future<List<Movie>> Function ({required String qu
 class SearchMovieDelegate extends SearchDelegate<Movie?> {
 
   SearchMoviesCallback searchMovies;
+  StreamController<List<Movie>> debounceMovies = StreamController.broadcast();
+  Timer? _debounceTimer;
 
   SearchMovieDelegate({
     required this.searchMovies
@@ -17,6 +21,24 @@ class SearchMovieDelegate extends SearchDelegate<Movie?> {
 
   @override
   String get searchFieldLabel => "Buscar película"; 
+
+  void clearStreams() {
+    debounceMovies.close();
+  }
+
+  void _onQueryChanged( String query ) {
+    print("queryString changed");
+    if( _debounceTimer?.isActive ?? false ) _debounceTimer!.cancel();
+    _debounceTimer = Timer( const Duration(milliseconds: 500), () async {
+      if ( query.isEmpty ) {
+        debounceMovies.add([]);
+        return;
+      }
+      print("searching movies");
+      final movies = await searchMovies(query: query);
+      debounceMovies.add(movies);
+    },);
+  }
 
   @override
   List<Widget>? buildActions(BuildContext context) {
@@ -37,6 +59,7 @@ class SearchMovieDelegate extends SearchDelegate<Movie?> {
   Widget? buildLeading(BuildContext context) {
     return IconButton(
       onPressed: () {
+        clearStreams();
         close(context, null);
       }, 
       icon: const Icon(Icons.arrow_back),
@@ -50,18 +73,27 @@ class SearchMovieDelegate extends SearchDelegate<Movie?> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    return FutureBuilder(
-      future: searchMovies( query: query),
+
+    _onQueryChanged(query);
+
+    return StreamBuilder(
+      // future: searchMovies( query: query),
+      stream: debounceMovies.stream,
       builder: (context, snapshot) {
         //! TODO: print(" Realizando petición de búsqueda...");
         final movies = snapshot.data ?? [];
 
         return ListView.builder(
         itemCount: movies.length,
-        itemBuilder: (context, index) => _MovieItem(
+        itemBuilder: (context, index) {
+          return _MovieItem(
             movie: movies[index],
-            searchForCallback: close,
-          )
+            searchForCallback: (BuildContext context, Movie? movie) {
+              clearStreams();
+              close(context, movie);
+            },
+          );
+        }
         );
       },
     );

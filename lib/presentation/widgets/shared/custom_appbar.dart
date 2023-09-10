@@ -4,6 +4,7 @@
 import 'package:cinemapedia/domain/entities/movie.dart';
 import 'package:cinemapedia/presentation/delegate/search_movie_delegate.dart';
 import 'package:cinemapedia/presentation/providers/movies/movies_repository_provider.dart';
+import 'package:cinemapedia/presentation/providers/search/search_movies_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +19,7 @@ class CustomAppbar extends ConsumerWidget {
 
   final colors = Theme.of( context ).colorScheme;
   final titleStyle = Theme.of(context).textTheme.titleMedium;
+  final consult = ref.watch( searchQueryProvider);
 
     return SafeArea( 
       bottom: false,
@@ -43,9 +45,13 @@ class CustomAppbar extends ConsumerWidget {
                 onPressed: (){
                   final searchMovies = ref.read(movieRepositoryProvider).searchMovies;
                   showSearch<Movie?>(
+                    query: consult,
                     context: context, 
                     delegate: SearchMovieDelegate(
-                      searchMovies: searchMovies
+                      searchMovies: ({required String query}) {
+                        ref.read(searchQueryProvider.notifier).update((state) => query);
+                        return searchMovies(query: query);
+                      }
                     )
                   ).then((movie) => context.push('/movie/${movie!.id}'));
                 }, 
